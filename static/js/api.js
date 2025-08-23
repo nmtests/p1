@@ -1,6 +1,6 @@
 // static/js/api.js
 // Handles all communication with the backend API.
-const API_BASE_URL = "https://okgsquiz.onrender.com//api";
+const API_BASE_URL = "/api";
 
 const api = {
     // --- Token Management ---
@@ -34,9 +34,10 @@ const api = {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
             const data = await response.json();
             if (!response.ok) {
+                // IMPORTANT: On auth error, we now throw an error instead of reloading.
+                // The main.js file will catch this and call handleLogout().
                 if (response.status === 401 || response.status === 422) {
-                    this.removeToken();
-                    window.location.reload();
+                    throw new Error("Authentication failed. Please log in again.");
                 }
                 throw new Error(data.message || `Error: ${response.status}`);
             }
@@ -46,6 +47,9 @@ const api = {
             throw error;
         }
     },
+
+    // --- Public Endpoint ---
+    getSettings: () => api.call('/settings'), // THIS IS THE FIX: Points to the new public endpoint
 
     // --- Auth Endpoints ---
     studentLogin: (className, roll, pin) => api.call('/auth/student/login', 'POST', { className, roll, pin }),
@@ -72,7 +76,6 @@ const api = {
     addBadge: (data) => api.call('/admin/badges', 'POST', data),
     updateBadge: (id, data) => api.call(`/admin/badges/${id}`, 'PUT', data),
     deleteBadge: (id) => api.call(`/admin/badges/${id}`, 'DELETE'),
-    // Settings
-    getSettings: () => api.call('/admin/settings'),
+    // Settings (Update only)
     updateSettings: (data) => api.call('/admin/settings', 'POST', data),
 };
