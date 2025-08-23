@@ -1,6 +1,6 @@
 // static/js/api.js
 // Handles all communication with the backend API.
-const API_BASE_URL = "/api";
+const API_BASE_URL = "https://okgsquiz.onrender.com//api";
 
 const api = {
     // --- Token Management ---
