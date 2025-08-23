@@ -1,120 +1,139 @@
-
 # project/admin/routes.py
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from ..models import db, Setting, Participant, Admin, Club, Quiz, Question, Result, Badge, Topic
 from ..decorators import admin_required, super_admin_required
-import datetime
-import random
+import datetime, random
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/dashboard-data', methods=['GET'])
+# Helper to convert model object to dict
+def to_dict(obj):
+    if obj is None: return None
+    return {c.key: getattr(obj, c.key) for c in db.inspect(obj).mapper.column_attrs}
+
+@admin_bp.route('/all-data', methods=['GET'])
 @jwt_required()
 @admin_required
-def get_admin_dashboard_data():
-    stats = {
-        "students": Participant.query.count(),
-        "quizzes": Quiz.query.count(),
-        "results": Result.query.count(),
-        "clubs": Club.query.count()
-    }
+def get_all_admin_data():
+    """Fetches all necessary data for the admin panel in one go."""
+    participants = [to_dict(p) for p in Participant.query.order_by(Participant.class_name, Participant.roll).all()]
+    clubs = [to_dict(c) for c in Club.query.order_by(Club.club_name).all()]
+    quizzes = [to_dict(q) for q in Quiz.query.order_by(Quiz.quiz_title).all()]
+    badges = [to_dict(b) for b in Badge.query.order_by(Badge.name).all()]
+    topics = [to_dict(t) for t in Topic.query.order_by(Topic.name).all()]
     
-    quizzes = [{
-        "quizid": q.quiz_id, "quiztitle": q.quiz_title, "clubid": q.club_id, 
-        "status": q.status, "totalquestions": len(q.questions)
-    } for q in Quiz.query.all()]
-
-    all_results = [{
-        "resultid": r.result_id, "quizid": r.quiz_id, 
-        "QuizTitle": r.quiz.quiz_title if r.quiz else "N/A",
-        "StudentName": r.participant.name if r.participant else "N/A",
-        "studentclass": r.participant.class_name if r.participant else "N/A",
-        "studentroll": r.participant.roll if r.participant else "N/A",
-        "score": r.score, "timestamp": r.timestamp.isoformat()
-    } for r in Result.query.order_by(Result.timestamp.desc()).all()]
+    stats = {
+        "students": len(participants), "quizzes": len(quizzes),
+        "clubs": len(clubs), "results": Result.query.count()
+    }
 
     return jsonify({
-        "stats": stats,
-        "quizzes": quizzes,
-        "allResults": all_results
+        "participants": participants, "clubs": clubs, "quizzes": quizzes,
+        "badges": badges, "topics": topics, "stats": stats
     })
 
-# Participant Management
-@admin_bp.route('/participants', methods=['GET', 'POST'])
+# CRUD for Participants
+@admin_bp.route('/participants', methods=['POST'])
 @jwt_required()
 @admin_required
-def manage_participants():
-    if request.method == 'GET':
-        participants = Participant.query.all()
-        return jsonify([{
-            "id": p.id, "Class": p.class_name, "roll": p.roll, 
-            "name": p.name, "pin": p.pin
-        } for p in participants])
-    
-    if request.method == 'POST':
-        data = request.get_json()
-        new_p = Participant(class_name=data['participantClass'], roll=data['participantRoll'], name=data['participantName'], pin=data['participantPin'])
-        db.session.add(new_p)
-        db.session.commit()
-        return jsonify(message="Participant added successfully"), 201
+def add_participant():
+    data = request.get_json()
+    new_p = Participant(class_name=data['class_name'], roll=data['roll'], name=data['name'], pin=data['pin'])
+    db.session.add(new_p)
+    db.session.commit()
+    return jsonify(to_dict(new_p)), 201
 
-@admin_bp.route('/participants/<int:participant_id>', methods=['PUT', 'DELETE'])
+@admin_bp.route('/participants/<int:id>', methods=['PUT', 'DELETE'])
 @jwt_required()
 @admin_required
-def manage_single_participant(participant_id):
-    p = Participant.query.get_or_404(participant_id)
+def manage_participant(id):
+    p = Participant.query.get_or_404(id)
     if request.method == 'PUT':
         data = request.get_json()
-        p.class_name = data['participantClass']
-        p.roll = data['participantRoll']
-        p.name = data['participantName']
-        p.pin = data['participantPin']
+        p.class_name = data['class_name']
+        p.roll = data['roll']
+        p.name = data['name']
+        p.pin = data['pin']
         db.session.commit()
-        return jsonify(message="Participant updated successfully")
-    
-    if request.method == 'DELETE':
+        return jsonify(to_dict(p))
+    elif request.method == 'DELETE':
         db.session.delete(p)
         db.session.commit()
-        return jsonify(message="Participant deleted successfully")
+        return jsonify(message="Participant deleted")
 
-# Badge Management (SuperAdmin only)
-@admin_bp.route('/badges', methods=['GET', 'POST'])
+# CRUD for Clubs, Badges, Topics (following the same pattern)
+# For brevity, only one is fully implemented here.
+@admin_bp.route('/clubs', methods=['POST'])
+@jwt_required()
+@admin_required
+def add_club():
+    data = request.get_json()
+    new_c = Club(club_id=f"CLUB{int(datetime.datetime.utcnow().timestamp())}", club_name=data['club_name'], club_logo_url=data['club_logo_url'])
+    db.session.add(new_c)
+    db.session.commit()
+    return jsonify(to_dict(new_c)), 201
+
+@admin_bp.route('/clubs/<int:id>', methods=['PUT', 'DELETE'])
+@jwt_required()
+@admin_required
+def manage_club(id):
+    c = Club.query.get_or_404(id)
+    if request.method == 'PUT':
+        data = request.get_json()
+        c.club_name = data['club_name']
+        c.club_logo_url = data['club_logo_url']
+        db.session.commit()
+        return jsonify(to_dict(c))
+    elif request.method == 'DELETE':
+        # Ensure no quizzes are associated before deleting
+        if Quiz.query.filter_by(club_id=c.club_id).count() > 0:
+            return jsonify(message="Cannot delete club with active quizzes"), 400
+        db.session.delete(c)
+        db.session.commit()
+        return jsonify(message="Club deleted")
+
+# CRUD for Badges
+@admin_bp.route('/badges', methods=['POST'])
 @jwt_required()
 @super_admin_required
-def manage_badges():
-    if request.method == 'GET':
-        badges = Badge.query.all()
-        return jsonify([{
-            "id": b.id, "name": b.name, "description": b.description, "icon_url": b.icon_url
-        } for b in badges])
-    
-    if request.method == 'POST':
+def add_badge():
+    data = request.get_json()
+    new_b = Badge(name=data['name'], description=data['description'], icon_url=data['icon_url'])
+    db.session.add(new_b)
+    db.session.commit()
+    return jsonify(to_dict(new_b)), 201
+
+@admin_bp.route('/badges/<int:id>', methods=['PUT', 'DELETE'])
+@jwt_required()
+@super_admin_required
+def manage_badge(id):
+    b = Badge.query.get_or_404(id)
+    if request.method == 'PUT':
         data = request.get_json()
-        new_badge = Badge(name=data['name'], description=data['description'], icon_url=data['icon_url'])
-        db.session.add(new_badge)
+        b.name = data['name']
+        b.description = data['description']
+        b.icon_url = data['icon_url']
         db.session.commit()
-        return jsonify(message="Badge created successfully"), 201
+        return jsonify(to_dict(b))
+    elif request.method == 'DELETE':
+        db.session.delete(b)
+        db.session.commit()
+        return jsonify(message="Badge deleted")
 
-# ... এখানে ক্লাব, কুইজ, টপিক ইত্যাদির জন্য একই রকম CRUD API তৈরি করা হবে ...
-# কোড সংক্ষিপ্ত রাখার জন্য এখানে সব দেওয়া হলো না, তবে প্যাটার্নটি একই রকম হবে।
-# যেমন: /clubs, /quizzes, /topics ইত্যাদি।
-
-# Website Settings (SuperAdmin only)
+# Website Settings
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @jwt_required()
 @super_admin_required
 def manage_settings():
     if request.method == 'GET':
         settings_db = Setting.query.all()
-        settings = {s.key: s.value for s in settings_db}
-        return jsonify(settings)
-    
-    if request.method == 'POST':
+        return jsonify({s.key: s.value for s in settings_db})
+    elif request.method == 'POST':
         data = request.get_json()
         for key, value in data.items():
             setting = Setting.query.get(key)
-            if setting:
-                setting.value = str(value)
+            if setting: setting.value = str(value)
+            else: db.session.add(Setting(key=key, value=str(value)))
         db.session.commit()
-        return jsonify(message="Settings updated successfully")
+        return jsonify(message="Settings updated")
