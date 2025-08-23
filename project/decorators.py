@@ -4,9 +4,6 @@ from flask_jwt_extended import get_jwt_identity
 from flask import jsonify
 
 def admin_required(fn):
-    """
-    শুধুমাত্র অ্যাডমিনদের জন্য রুট সুরক্ষিত করার ডেকোরেটর।
-    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         current_user = get_jwt_identity()
@@ -16,9 +13,6 @@ def admin_required(fn):
     return wrapper
 
 def super_admin_required(fn):
-    """
-    শুধুমাত্র সুপার অ্যাডমিনদের জন্য রুট সুরক্ষিত করার ডেকোরেটর।
-    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         current_user = get_jwt_identity()
