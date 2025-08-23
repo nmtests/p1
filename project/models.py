@@ -5,7 +5,12 @@ import datetime
 
 db = SQLAlchemy()
 
-# Gamification & Analytics Models
+# Association Table for Many-to-Many relationship
+question_topic = db.Table('question_topic',
+    db.Column('question_id', db.Integer, db.ForeignKey('question.id'), primary_key=True),
+    db.Column('topic_id', db.Integer, db.ForeignKey('topic.id'), primary_key=True)
+)
+
 class Badge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
@@ -23,12 +28,6 @@ class Topic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
 
-question_topic = db.Table('question_topic',
-    db.Column('question_id', db.Integer, db.ForeignKey('question.id'), primary_key=True),
-    db.Column('topic_id', db.Integer, db.ForeignKey('topic.id'), primary_key=True)
-)
-
-# Core Models
 class Setting(db.Model):
     key = db.Column(db.String(100), primary_key=True)
     value = db.Column(db.String(500))
@@ -49,11 +48,8 @@ class Admin(db.Model):
     name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='Teacher')
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def set_password(self, password): self.password_hash = generate_password_hash(password)
+    def check_password(self, password): return check_password_hash(self.password_hash, password)
 
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
