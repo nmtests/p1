@@ -18,12 +18,12 @@ def student_login():
 @auth_bp.route('/admin/login', methods=['POST'])
 def admin_login():
     data = request.get_json()
-    # --- THIS IS THE CHANGE ---
-    # We now check for admin_id and pin directly
-    admin = Admin.query.filter_by(admin_id=data.get('adminId'), pin=data.get('password')).first()
+    # --- THIS IS THE FIX ---
+    # We now expect 'adminId' and 'pin' from the frontend for clarity, instead of 'password'.
+    admin = Admin.query.filter_by(admin_id=data.get('adminId'), pin=data.get('pin')).first()
     
     if admin:
-    # --- END OF CHANGE ---
+    # --- END OF FIX ---
         identity = {"type": "admin", "id": admin.id, "name": admin.name, "role": admin.role}
         access_token = create_access_token(identity=identity)
         return jsonify(access_token=access_token, user=identity)
