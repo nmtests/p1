@@ -1,29 +1,18 @@
 // static/js/api.js
-// =================================================================
 // Handles all communication with the backend API.
-// Manages JWT token for authenticated requests.
-// =================================================================
-
-const API_BASE_URL = "/api"; // Using a relative URL
+const API_BASE_URL = "/api";
 
 const api = {
     // --- Token Management ---
-    setToken(token) {
-        localStorage.setItem('jwt_token', token);
-    },
-    getToken() {
-        return localStorage.getItem('jwt_token');
-    },
-    removeToken() {
-        localStorage.removeItem('jwt_token');
-    },
+    setToken(token) { localStorage.setItem('jwt_token', token); },
+    getToken() { return localStorage.getItem('jwt_token'); },
+    removeToken() { localStorage.removeItem('jwt_token'); },
     getUserFromToken() {
         const token = this.getToken();
         if (!token) return null;
         try {
-            // Decode the payload part of the token
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.sub; // 'sub' is the standard key for subject/identity
+            return payload.sub;
         } catch (error) {
             console.error("Failed to decode token:", error);
             this.removeToken();
@@ -38,39 +27,27 @@ const api = {
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
-
-        const config = {
-            method,
-            headers,
-        };
-
-        if (body) {
-            config.body = JSON.stringify(body);
-        }
+        const config = { method, headers };
+        if (body) { config.body = JSON.stringify(body); }
 
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
             const data = await response.json();
-
             if (!response.ok) {
-                // If the token is expired or invalid, log the user out
                 if (response.status === 401 || response.status === 422) {
                     this.removeToken();
-                    // We'll reload the page to reset the state
                     window.location.reload();
                 }
-                // Throw an error with the message from the backend
                 throw new Error(data.message || `Error: ${response.status}`);
             }
             return data;
         } catch (error) {
             console.error(`API call failed: ${method} ${endpoint}`, error);
-            // Re-throw the error so it can be caught by the caller
             throw error;
         }
     },
 
-    // --- Authentication Endpoints ---
+    // --- Auth Endpoints ---
     studentLogin: (className, roll, pin) => api.call('/auth/student/login', 'POST', { className, roll, pin }),
     adminLogin: (adminId, password) => api.call('/auth/admin/login', 'POST', { adminId, password }),
 
@@ -82,16 +59,20 @@ const api = {
     getLeaderboard: () => api.call('/student/leaderboard'),
 
     // --- Admin Endpoints ---
-    getAdminDashboard: () => api.call('/admin/dashboard-data'),
-    getParticipants: () => api.call('/admin/participants'),
+    getAllAdminData: () => api.call('/admin/all-data'),
+    // Participants
     addParticipant: (data) => api.call('/admin/participants', 'POST', data),
     updateParticipant: (id, data) => api.call(`/admin/participants/${id}`, 'PUT', data),
     deleteParticipant: (id) => api.call(`/admin/participants/${id}`, 'DELETE'),
-    
-    getBadges: () => api.call('/admin/badges'),
+    // Clubs
+    addClub: (data) => api.call('/admin/clubs', 'POST', data),
+    updateClub: (id, data) => api.call(`/admin/clubs/${id}`, 'PUT', data),
+    deleteClub: (id) => api.call(`/admin/clubs/${id}`, 'DELETE'),
+    // Badges
     addBadge: (data) => api.call('/admin/badges', 'POST', data),
-
+    updateBadge: (id, data) => api.call(`/admin/badges/${id}`, 'PUT', data),
+    deleteBadge: (id) => api.call(`/admin/badges/${id}`, 'DELETE'),
+    // Settings
     getSettings: () => api.call('/admin/settings'),
     updateSettings: (data) => api.call('/admin/settings', 'POST', data),
-    // ... Other admin endpoints will be added here following the same pattern
 };
