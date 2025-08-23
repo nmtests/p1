@@ -2,48 +2,35 @@
 # =================================================================
 # Application Entry Point.
 # Use 'flask db init', 'flask db migrate', 'flask db upgrade' for database setup.
+# Use 'flask init-db' to add sample data.
 # Use 'flask run' to start the development server.
 # =================================================================
 
 import os
 from project import create_app, db
-from project.models import Setting, Admin, Participant, Club, Quiz, Question, Badge, Topic
+from project.models import Setting, Admin, Participant, Club, Quiz, Question, Badge, Topic, UserBadge
 from dotenv import load_dotenv
 
-load_dotenv() # .env ফাইল থেকে এনভায়রনমেন্ট ভেরিয়েবল লোড করার জন্য
+load_dotenv()
 
-# config_name এনভায়রনমেন্ট ভেরিয়েবল থেকে নেওয়া হবে, ডিফল্ট 'development'
 config_name = os.getenv('FLASK_CONFIG', 'development')
 app = create_app(config_name)
 
 @app.shell_context_processor
 def make_shell_context():
-    """
-    'flask shell' কমান্ড চালানোর সময় এই অবজেক্টগুলো স্বয়ংক্রিয়ভাবে ইম্পোর্ট হবে।
-    ডেটাবেস পরীক্ষার জন্য এটি খুব দরকারি।
-    """
+    """Provides shell context for flask shell."""
     return {
-        'db': db,
-        'Setting': Setting,
-        'Admin': Admin,
-        'Participant': Participant,
-        'Club': Club,
-        'Quiz': Quiz,
-        'Question': Question,
-        'Badge': Badge,
-        'Topic': Topic
+        'db': db, 'Setting': Setting, 'Admin': Admin, 'Participant': Participant,
+        'Club': Club, 'Quiz': Quiz, 'Question': Question, 'Badge': Badge, 'Topic': Topic, 'UserBadge': UserBadge
     }
 
 @app.cli.command('init-db')
 def init_db_command():
-    """
-    ডাটাবেস ইনিশিয়ালাইজ করে এবং স্যাম্পল ডেটা যোগ করে।
-    """
+    """Initializes the database with sample data."""
     db.drop_all()
     db.create_all()
     print("Database Initializing with sample data...")
 
-    # স্যাম্পল ডেটা এখানে যোগ করা হবে (আগের মতোই)
     settings_data = [
         Setting(key='portaltitle', value='ওমর কিন্ডারগার্টেন স্কুল (Advanced)'),
         Setting(key='portalannouncement', value='আয়োজনে: এসোসিয়েশন অফ লিটল প্রোগ্রামার্স'),
