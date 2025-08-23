@@ -43,13 +43,14 @@ class Participant(db.Model):
     __table_args__ = (db.UniqueConstraint('class_name', 'roll', name='_class_roll_uc'),)
 
 class Admin(db.Model):
+    # --- THIS IS THE CHANGE ---
     id = db.Column(db.Integer, primary_key=True)
     admin_id = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    pin = db.Column(db.String(50), nullable=False) # Using a simple PIN instead of a hash
     role = db.Column(db.String(50), nullable=False, default='Teacher')
-    def set_password(self, password): self.password_hash = generate_password_hash(password)
-    def check_password(self, password): return check_password_hash(self.password_hash, password)
+    # Removed set_password and check_password methods
+    # --- END OF CHANGE ---
 
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
