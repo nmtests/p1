@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="bn" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <title>ওমর কিন্ডারগার্টেন স্কুল - কুইজ পোর্টাল</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="antialiased">
+
+    <!-- Loader and Header (Unchanged) -->
+    <div id="loader" class="loader-backdrop" style="display: none;"><div class="loader"></div></div>
+    <header class="py-4 px-6 flex justify-between items-center border-b border-[var(--border)] bg-[var(--foreground)] sticky top-0 z-30 shadow-md">
+        <div class="flex items-center gap-4">
+            <img id="schoolLogo" src="https://i.postimg.cc/sDgPX0zb/school-logo.png" alt="School Logo" class="h-12 w-12">
+            <div>
+                <h1 id="portalTitleNav" class="text-lg md:text-2xl title-font text-[var(--accent)] font-bold">ওমর কিন্ডারগার্টেন এন্ড ওমর গার্টেন একাডেমী</h1>
+                <p id="portalAnnouncement" class="text-xs md:text-base mt-1 text-[var(--text-secondary)]">আয়োজনে: এসোসিয়েশন অফ লিটল প্রোগ্রামার্স এন্ড কম্পিউটার গিক্স (ALPCG)</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+            <div id="theme-switcher-container"></div>
+            <span id="userGreeting" class="text-slate-600 font-bold mr-2 hidden md:inline-block"></span>
+            <button id="logoutButton" class="action-button !w-auto !text-sm !py-2 !px-4 hidden !bg-red-500 hover:!bg-red-600">লগআউট</button>
+            <button id="adminLoginButton" class="action-button !w-auto !text-sm !py-2 !px-4 !bg-amber-500 hover:!bg-amber-600">অ্যাডমিন</button>
+            <button id="hamburgerMenu" class="md:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="min-h-screen">
+        <!-- Student Login View -->
+        <div id="studentLoginView" class="view container max-w-lg mx-auto p-4 mt-12"></div>
+
+        <!-- Student Dashboard View -->
+        <div id="studentDashboardView" class="view container max-w-6xl mx-auto p-4 mt-8">
+            <div class="flex border-b border-[var(--border)] mb-6">
+                <button data-tab="activeQuizzes" class="student-tab-button tab-button active">সক্রিয় কুইজ</button>
+                <button data-tab="myResults" class="student-tab-button tab-button">আমার ফলাফল</button>
+                <button data-tab="myBadges" class="student-tab-button tab-button">আমার ব্যাজ</button>
+                <button data-tab="leaderboard" class="student-tab-button tab-button">লিডারবোর্ড</button>
+            </div>
+            <div id="studentDashboardContent">
+                <div id="activeQuizzesContent" class="student-tab-content"></div>
+                <div id="myResultsContent" class="student-tab-content hidden"></div>
+                <div id="myBadgesContent" class="student-tab-content hidden"></div>
+                <div id="leaderboardContent" class="student-tab-content hidden"></div>
+            </div>
+        </div>
+
+        <!-- Quiz and Result Views -->
+        <div id="quizView" class="view container max-w-3xl mx-auto p-4 mt-8"></div>
+        <div id="resultView" class="view container max-w-2xl mx-auto p-4 mt-8"></div>
+
+        <!-- Admin View -->
+        <div id="adminDashboardView" class="view">
+            <div class="admin-layout">
+                <aside id="adminSidebar" class="admin-sidebar"></aside>
+                <div id="adminMainContent" class="admin-main-content"></div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer (Unchanged) -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <h3 class="text-lg font-bold">ওমর কিন্ডারগার্টেন স্কুল এন্ড ওমর গার্টেন একাডেমী</h3>
+                <p class="text-sm">তত্ত্বাবধানে: Fahad Bin Mamun, President, ALPCG</p>
+                <p class="copyright">&copy; 2024 Omar Kindergarten School & Omar Garten Academy. All Rights Reserved.</p>
+            </div>
+            <div id="social-icons-container"></div>
+        </div>
+    </footer>
+
+    <!-- Modals Container -->
+    <div id="modals-container"></div>
+
+    <!-- Modular JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
