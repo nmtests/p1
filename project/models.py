@@ -1,47 +1,34 @@
 # project/models.py
-
-import os
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
-import random
 
 db = SQLAlchemy()
 
-# --- New Models for Gamification & Analytics ---
-
+# Gamification & Analytics Models
 class Badge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(255))
-    icon_url = db.Column(db.String(300)) # Badge-এর ছবি
+    icon_url = db.Column(db.String(300))
 
 class UserBadge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'), nullable=False)
     badge_id = db.Column(db.Integer, db.ForeignKey('badge.id'), nullable=False)
     awarded_on = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-
-class UserActivity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'), nullable=False)
-    activity_type = db.Column(db.String(50)) # e.g., 'quiz_completed', 'login'
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    points_earned = db.Column(db.Integer, default=0)
+    badge = db.relationship('Badge', backref='user_badges')
 
 class Topic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
 
-# Many-to-Many relationship between Question and Topic
 question_topic = db.Table('question_topic',
     db.Column('question_id', db.Integer, db.ForeignKey('question.id'), primary_key=True),
     db.Column('topic_id', db.Integer, db.ForeignKey('topic.id'), primary_key=True)
 )
 
-
-# --- Existing Models (with minor improvements) ---
-
+# Core Models
 class Setting(db.Model):
     key = db.Column(db.String(100), primary_key=True)
     value = db.Column(db.String(500))
@@ -52,7 +39,7 @@ class Participant(db.Model):
     roll = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     pin = db.Column(db.String(50), nullable=False)
-    total_points = db.Column(db.Integer, default=0) # Total points for leaderboard
+    total_points = db.Column(db.Integer, default=0)
     badges = db.relationship('UserBadge', backref='participant', lazy=True)
     __table_args__ = (db.UniqueConstraint('class_name', 'roll', name='_class_roll_uc'),)
 
@@ -65,7 +52,6 @@ class Admin(db.Model):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
@@ -91,15 +77,14 @@ class Question(db.Model):
     question_id = db.Column(db.String(50), unique=True, nullable=False)
     quiz_id = db.Column(db.String(50), db.ForeignKey('quiz.quiz_id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
-    question_type = db.Column(db.String(50), default='multiple_choice') # New field for different question types
+    question_type = db.Column(db.String(50), default='multiple_choice')
     option_a = db.Column(db.String(200))
     option_b = db.Column(db.String(200))
     option_c = db.Column(db.String(200))
     option_d = db.Column(db.String(200))
-    correct_answer = db.Column(db.String(200), nullable=False) # Changed to String to support fill-in-the-blanks
+    correct_answer = db.Column(db.String(200), nullable=False)
     explanation = db.Column(db.Text, nullable=True)
-    topics = db.relationship('Topic', secondary=question_topic, lazy='subquery',
-                             backref=db.backref('questions', lazy=True))
+    topics = db.relationship('Topic', secondary=question_topic, lazy='subquery', backref=db.backref('questions', lazy=True))
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -110,3 +95,5 @@ class Result(db.Model):
     total_questions = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     submitted_answers = db.Column(db.Text)
+    participant = db.relationship('Participant', backref='results')
+    quiz = db.relationship('Quiz', backref='results')
