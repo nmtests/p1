@@ -1,139 +1,81 @@
-# project/admin/routes.py
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-from ..models import db, Setting, Participant, Admin, Club, Quiz, Question, Result, Badge, Topic
-from ..decorators import admin_required, super_admin_required
-import datetime, random
+// static/js/api.js
+// Handles all communication with the backend API.
+const API_BASE_URL = "/api";
 
-admin_bp = Blueprint('admin', __name__)
+const api = {
+    // --- Token Management ---
+    setToken(token) { localStorage.setItem('jwt_token', token); },
+    getToken() { return localStorage.getItem('jwt_token'); },
+    removeToken() { localStorage.removeItem('jwt_token'); },
+    getUserFromToken() {
+        const token = this.getToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.sub;
+        } catch (error) {
+            console.error("Failed to decode token:", error);
+            this.removeToken();
+            return null;
+        }
+    },
 
-# Helper to convert model object to dict
-def to_dict(obj):
-    if obj is None: return None
-    return {c.key: getattr(obj, c.key) for c in db.inspect(obj).mapper.column_attrs}
+    // --- Core API Call Function ---
+    async call(endpoint, method = 'GET', body = null) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = this.getToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const config = { method, headers };
+        if (body) { config.body = JSON.stringify(body); }
 
-@admin_bp.route('/all-data', methods=['GET'])
-@jwt_required()
-@admin_required
-def get_all_admin_data():
-    """Fetches all necessary data for the admin panel in one go."""
-    participants = [to_dict(p) for p in Participant.query.order_by(Participant.class_name, Participant.roll).all()]
-    clubs = [to_dict(c) for c in Club.query.order_by(Club.club_name).all()]
-    quizzes = [to_dict(q) for q in Quiz.query.order_by(Quiz.quiz_title).all()]
-    badges = [to_dict(b) for b in Badge.query.order_by(Badge.name).all()]
-    topics = [to_dict(t) for t in Topic.query.order_by(Topic.name).all()]
-    
-    stats = {
-        "students": len(participants), "quizzes": len(quizzes),
-        "clubs": len(clubs), "results": Result.query.count()
-    }
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+            const data = await response.json();
+            if (!response.ok) {
+                // IMPORTANT: On auth error, we now throw an error instead of reloading.
+                // The main.js file will catch this and call handleLogout().
+                if (response.status === 401 || response.status === 422) {
+                    throw new Error("Authentication failed. Please log in again.");
+                }
+                throw new Error(data.message || `Error: ${response.status}`);
+            }
+            return data;
+        } catch (error) {
+            console.error(`API call failed: ${method} ${endpoint}`, error);
+            throw error;
+        }
+    },
 
-    return jsonify({
-        "participants": participants, "clubs": clubs, "quizzes": quizzes,
-        "badges": badges, "topics": topics, "stats": stats
-    })
+    // --- Public Endpoint ---
+    getSettings: () => api.call('/settings'), // THIS IS THE FIX: Points to the new public endpoint
 
-# CRUD for Participants
-@admin_bp.route('/participants', methods=['POST'])
-@jwt_required()
-@admin_required
-def add_participant():
-    data = request.get_json()
-    new_p = Participant(class_name=data['class_name'], roll=data['roll'], name=data['name'], pin=data['pin'])
-    db.session.add(new_p)
-    db.session.commit()
-    return jsonify(to_dict(new_p)), 201
+    // --- Auth Endpoints ---
+    studentLogin: (className, roll, pin) => api.call('/auth/student/login', 'POST', { className, roll, pin }),
+    adminLogin: (adminId, password) => api.call('/auth/admin/login', 'POST', { adminId, password }),
 
-@admin_bp.route('/participants/<int:id>', methods=['PUT', 'DELETE'])
-@jwt_required()
-@admin_required
-def manage_participant(id):
-    p = Participant.query.get_or_404(id)
-    if request.method == 'PUT':
-        data = request.get_json()
-        p.class_name = data['class_name']
-        p.roll = data['roll']
-        p.name = data['name']
-        p.pin = data['pin']
-        db.session.commit()
-        return jsonify(to_dict(p))
-    elif request.method == 'DELETE':
-        db.session.delete(p)
-        db.session.commit()
-        return jsonify(message="Participant deleted")
+    // --- Student Endpoints ---
+    getStudentDashboard: () => api.call('/student/dashboard-data'),
+    getQuizDetails: (quizId) => api.call(`/student/quiz-details/${quizId}`),
+    submitQuiz: (payload) => api.call('/student/submit-quiz', 'POST', payload),
+    getReviewDetails: (resultId) => api.call(`/student/review-details/${resultId}`),
+    getLeaderboard: () => api.call('/student/leaderboard'),
 
-# CRUD for Clubs, Badges, Topics (following the same pattern)
-# For brevity, only one is fully implemented here.
-@admin_bp.route('/clubs', methods=['POST'])
-@jwt_required()
-@admin_required
-def add_club():
-    data = request.get_json()
-    new_c = Club(club_id=f"CLUB{int(datetime.datetime.utcnow().timestamp())}", club_name=data['club_name'], club_logo_url=data['club_logo_url'])
-    db.session.add(new_c)
-    db.session.commit()
-    return jsonify(to_dict(new_c)), 201
-
-@admin_bp.route('/clubs/<int:id>', methods=['PUT', 'DELETE'])
-@jwt_required()
-@admin_required
-def manage_club(id):
-    c = Club.query.get_or_404(id)
-    if request.method == 'PUT':
-        data = request.get_json()
-        c.club_name = data['club_name']
-        c.club_logo_url = data['club_logo_url']
-        db.session.commit()
-        return jsonify(to_dict(c))
-    elif request.method == 'DELETE':
-        # Ensure no quizzes are associated before deleting
-        if Quiz.query.filter_by(club_id=c.club_id).count() > 0:
-            return jsonify(message="Cannot delete club with active quizzes"), 400
-        db.session.delete(c)
-        db.session.commit()
-        return jsonify(message="Club deleted")
-
-# CRUD for Badges
-@admin_bp.route('/badges', methods=['POST'])
-@jwt_required()
-@super_admin_required
-def add_badge():
-    data = request.get_json()
-    new_b = Badge(name=data['name'], description=data['description'], icon_url=data['icon_url'])
-    db.session.add(new_b)
-    db.session.commit()
-    return jsonify(to_dict(new_b)), 201
-
-@admin_bp.route('/badges/<int:id>', methods=['PUT', 'DELETE'])
-@jwt_required()
-@super_admin_required
-def manage_badge(id):
-    b = Badge.query.get_or_404(id)
-    if request.method == 'PUT':
-        data = request.get_json()
-        b.name = data['name']
-        b.description = data['description']
-        b.icon_url = data['icon_url']
-        db.session.commit()
-        return jsonify(to_dict(b))
-    elif request.method == 'DELETE':
-        db.session.delete(b)
-        db.session.commit()
-        return jsonify(message="Badge deleted")
-
-# Website Settings
-@admin_bp.route('/settings', methods=['GET', 'POST'])
-@jwt_required()
-@super_admin_required
-def manage_settings():
-    if request.method == 'GET':
-        settings_db = Setting.query.all()
-        return jsonify({s.key: s.value for s in settings_db})
-    elif request.method == 'POST':
-        data = request.get_json()
-        for key, value in data.items():
-            setting = Setting.query.get(key)
-            if setting: setting.value = str(value)
-            else: db.session.add(Setting(key=key, value=str(value)))
-        db.session.commit()
-        return jsonify(message="Settings updated")
+    // --- Admin Endpoints ---
+    getAllAdminData: () => api.call('/admin/all-data'),
+    // Participants
+    addParticipant: (data) => api.call('/admin/participants', 'POST', data),
+    updateParticipant: (id, data) => api.call(`/admin/participants/${id}`, 'PUT', data),
+    deleteParticipant: (id) => api.call(`/admin/participants/${id}`, 'DELETE'),
+    // Clubs
+    addClub: (data) => api.call('/admin/clubs', 'POST', data),
+    updateClub: (id, data) => api.call(`/admin/clubs/${id}`, 'PUT', data),
+    deleteClub: (id) => api.call(`/admin/clubs/${id}`, 'DELETE'),
+    // Badges
+    addBadge: (data) => api.call('/admin/badges', 'POST', data),
+    updateBadge: (id, data) => api.call(`/admin/badges/${id}`, 'PUT', data),
+    deleteBadge: (id) => api.call(`/admin/badges/${id}`, 'DELETE'),
+    // Settings (Update only)
+    updateSettings: (data) => api.call('/admin/settings', 'POST', data),
+};
