@@ -29,7 +29,9 @@ target_metadata = db.metadata
 
 
 def get_url():
-    return os.getenv("DATABASE_URL").replace("postgres://", "postgresql://", 1)
+    # A fallback is added for safety, though Render provides the env var.
+    db_url = os.getenv("DATABASE_URL", "postgresql://user:pass@host/dbname")
+    return db_url.replace("postgres://", "postgresql://", 1)
 
 
 def run_migrations_offline() -> None:
@@ -63,7 +65,12 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_main_option, {})
+    # --- THIS IS THE FIX ---
+    # The original line was: config.get_section(config.config_main_option, {})
+    # The error suggested using 'config_ini_section' instead.
+    configuration = config.get_section(config.config_ini_section, {})
+    # --- END OF FIX ---
+    
     configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
         configuration,
