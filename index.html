@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="bn" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;স্মার্ট কুইজ প্ল্যাটফর্ম&quot;,
+        &quot;short_name&quot;: &quot;কুইজ প্ল্যাটফর্ম&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#FFFFFF&quot;,
+        &quot;theme_color&quot;: &quot;#3b82f6&quot;,
+        &quot;description&quot;: &quot;একটি আধুনিক ও ইন্টারেক্টিভ অনলাইন কুইজ প্ল্যাটফর্ম।&quot;,
+        &quot;icons&quot;: [
+            { &quot;src&quot;: &quot;https://placehold.co/192x192/3b82f6/FFFFFF?text=Q&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/png&quot; },
+            { &quot;src&quot;: &quot;https://placehold.co/512x512/3b82f6/FFFFFF?text=Q&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/png&quot; }
+        ]
+    }">
+    
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="কুইজ প্ল্যাটফর্ম">
+
+    <title>স্মার্ট কুইজ প্ল্যাটফর্ম</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body class="antialiased">
+
+    <div id="loader" class="loader-backdrop" style="display: none;"><div class="loader"></div></div>
+
+    <header class="py-4 px-6 flex justify-between items-center border-b border-[var(--border)] bg-[var(--foreground)] sticky top-0 z-30 shadow-md">
+        <div class="flex items-center gap-4">
+            <img id="schoolLogo" src="https://i.postimg.cc/sDgPX0zb/school-logo.png" alt="School Logo" class="h-12 w-12">
+            <div>
+                <h1 id="portalTitleNav" class="text-lg md:text-2xl title-font text-[var(--accent)] font-bold">স্মার্ট কুইজ প্ল্যাটফর্ম</h1>
+                <p id="portalAnnouncement" class="text-xs md:text-base mt-1 text-[var(--text-secondary)]">জ্ঞানের জগতে আপনাকে স্বাগতম!</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+            <div class="theme-switch-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <label class="theme-switch" for="theme-toggle">
+                    <input type="checkbox" id="theme-toggle" />
+                    <div class="slider round"></div>
+                </label>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </div>
+            <span id="userGreeting" class="text-slate-600 font-bold mr-2 hidden md:inline-block"></span>
+            <button id="logoutButton" class="action-button !w-auto !text-sm !py-2 !px-4 hidden !bg-red-500 hover:!bg-red-600">লগআউট</button>
+            <button id="adminLoginButton" class="action-button !w-auto !text-sm !py-2 !px-4 !bg-amber-500 hover:!bg-amber-600">অ্যাডমিন</button>
+            <button id="hamburgerMenu" class="md:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="min-h-screen">
+        <!-- Student Views -->
+        <div id="studentLoginView" class="view container max-w-lg mx-auto p-4 mt-12"><div class="card login-card"><h2 class="text-3xl font-bold mb-2 title-font text-center">কুইজে অংশগ্রহণ করুন</h2><p id="loginPageMessage" class="text-center text-[var(--text-secondary)] mb-6"></p><form id="studentLoginForm"><select id="studentClass" class="input-field" required><option value="">আপনার শ্রেণী নির্বাচন করুন</option></select><input type="number" id="studentRoll" class="input-field" placeholder="অংশগ্রহণকারী আইডি (রোল)" required><input type="password" id="studentPin" class="input-field" placeholder="প্রবেশ কোড (পিন)" required><button type="submit" class="action-button mt-2">প্রবেশ করুন</button><p id="loginError" class="text-red-500 mt-4 hidden text-center font-bold"></p></form></div></div>
+        
+        <div id="studentDashboardView" class="view container max-w-6xl mx-auto p-4 mt-8">
+            <!-- Gamification Header -->
+            <div id="gamificationHeader" class="card mb-8"></div>
+            <!-- Tabs -->
+            <div class="flex border-b border-[var(--border)] mb-6">
+                <button data-tab="activeQuizzes" class="student-tab-button active">সক্রিয় কুইজ</button>
+                <button data-tab="myResults" class="student-tab-button">আমার ফলাফল</button>
+                <button data-tab="leaderboard" class="student-tab-button">লিডারবোর্ড</button>
+                <button data-tab="achievements" class="student-tab-button">অর্জনসমূহ</button>
+            </div>
+            <div id="studentDashboardContent">
+                <div id="tab-activeQuizzes" class="student-tab-content">
+                    <h2 class="text-4xl title-font text-center mb-2">সক্রিয় কুইজসমূহ</h2>
+                    <p id="dashboardWelcomeMessage" class="text-center text-[var(--text-secondary)] mb-8"></p>
+                    <div id="activeQuizzesList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+                </div>
+                <div id="tab-myResults" class="student-tab-content hidden">
+                    <h2 class="text-4xl title-font text-center mb-8">আমার ফলাফল</h2>
+                    <div id="myResultsList" class="table-wrapper"></div>
+                </div>
+                <div id="tab-leaderboard" class="student-tab-content hidden">
+                    <h2 class="text-4xl title-font text-center mb-8">লিডারবোর্ড</h2>
+                    <div id="leaderboardContent"></div>
+                </div>
+                <div id="tab-achievements" class="student-tab-content hidden">
+                     <h2 class="text-4xl title-font text-center mb-8">আমার অর্জনসমূহ</h2>
+                    <div id="achievementsList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizView" class="view container max-w-3xl mx-auto p-4 mt-8"><div class="card"><div class="flex justify-between items-center mb-4 font-bold"><p>Score: <span id="currentScore" class="title-font text-2xl text-[var(--accent)]">0</span></p><p>Question <span id="questionNumber">1</span>/<span id="totalQuestions">0</span></p><span id="quizTimer" class="title-font text-2xl text-[var(--accent)]">00:00</span></div><div class="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700 mb-6"><div id="progressBar" class="bg-[var(--accent)] h-2.5 rounded-full" style="width: 100%; transition: all 0.5s;"></div></div><h2 id="questionText" class="text-2xl font-bold mb-6 leading-tight">প্রশ্ন লোড হচ্ছে...</h2><div id="questionImageContainer" class="my-4"></div><div id="optionsContainer" class="space-y-3"></div><div class="mt-8 flex justify-between"><button id="prevQuestionBtn" class="action-button !w-auto !bg-slate-500 hover:!bg-slate-600">পূর্ববর্তী</button><button id="nextQuestionBtn" class="action-button !w-auto">পরবর্তী</button><button id="submitQuizBtn" class="action-button !w-auto hidden !bg-green-500 hover:!bg-green-600">জমা দিন</button></div></div></div>
+        <div id="resultView" class="view container max-w-2xl mx-auto p-4 mt-8"><div class="card text-center"><h2 class="text-5xl title-font mb-4 text-[var(--accent)]">কুইজ সম্পন্ন!</h2><p class="text-3xl font-bold my-4">আপনার স্কোর: <span id="finalScore">0</span> / <span id="finalTotal">0</span></p><div id="resultGamification" class="my-4"></div><div class="max-w-md mx-auto my-6"><canvas id="resultChartCanvas"></canvas></div><div class="flex gap-4 mt-6"><button id="reviewAnswersBtn" class="action-button !bg-indigo-500 hover:!bg-indigo-600">উত্তর পর্যালোচনা</button><button id="backToDashboardBtn" class="action-button">ড্যাশবোর্ডে ফিরে যান</button></div></div></div>
+
+        <!-- Admin View -->
+        <div id="adminDashboardView" class="view">
+            <div class="admin-layout">
+                <aside id="adminSidebar" class="admin-sidebar">
+                    <h2 class="text-2xl font-bold title-font mb-8">অ্যাডমিন প্যানেল</h2>
+                    <nav class="flex flex-col gap-2">
+                        <a href="#" data-tab="dashboard" class="sidebar-link active">ড্যাশবোর্ড</a>
+                        <a href="#" data-tab="manage-quizzes" class="sidebar-link">কুইজসমূহ</a>
+                        <a href="#" data-tab="question-bank" class="sidebar-link">প্রশ্ন ব্যাংক</a>
+                        <a href="#" data-tab="manage-participants" class="sidebar-link">অংশগ্রহণকারী</a>
+                        <a href="#" data-tab="manage-clubs" class="sidebar-link">ক্লাবসমূহ</a>
+                        <a href="#" data-tab="view-results" class="sidebar-link">ফলাফল</a>
+                        <a href="#" data-tab="announcements" class="sidebar-link">ঘোষণা</a>
+                        <a href="#" data-tab="manage-admins" class="sidebar-link" data-role="SuperAdmin">অ্যাডমিন ম্যানেজমেন্ট</a>
+                        <a href="#" data-tab="website-settings" class="sidebar-link" data-role="SuperAdmin">সেটিংস</a>
+                    </nav>
+                </aside>
+
+                <div class="admin-main-content">
+                    <div id="tab-dashboard" class="admin-tab-content"></div>
+                    <div id="tab-manage-quizzes" class="admin-tab-content hidden"></div>
+                    <div id="tab-question-bank" class="admin-tab-content hidden"></div>
+                    <div id="tab-manage-participants" class="admin-tab-content hidden"></div>
+                    <div id="tab-manage-clubs" class="admin-tab-content hidden"></div>
+                    <div id="tab-view-results" class="admin-tab-content hidden"></div>
+                    <div id="tab-announcements" class="admin-tab-content hidden"></div>
+                    <div id="tab-manage-admins" class="admin-tab-content hidden" data-role="SuperAdmin"></div>
+                    <div id="tab-website-settings" class="admin-tab-content hidden" data-role="SuperAdmin"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <!-- Footer content remains the same -->
+    </footer>
+
+    <!-- Modals -->
+    <div id="confirmationModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-md relative custom-modal"><h2 id="confirmationTitle" class="text-2xl font-bold mb-4 title-font">Are you sure?</h2><p id="confirmationMessage"></p><div class="modal-actions"><button id="confirmCancelBtn" class="action-button !bg-slate-500">Cancel</button><button id="confirmOkBtn" class="action-button !bg-red-500">Confirm</button></div></div></div>
+    <div id="adminLoginModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-md relative"><h2 class="text-3xl font-bold mb-4 title-font">Admin Access</h2><form id="adminLoginForm"><input type="text" id="adminId" class="input-field" placeholder="Enter Admin ID" required><input type="password" id="adminPassword" class="input-field" placeholder="Enter Admin Password" required><button type="submit" class="action-button mt-2">Login</button><p id="adminLoginError" class="text-red-500 mt-4 hidden text-center font-bold"></p></form><button id="closeAdminModal" class="absolute top-4 right-4 text-2xl font-bold text-slate-500 hover:text-red-500">&times;</button></div></div>
+    <div id="answerReviewModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-3xl relative"><h2 id="answerReviewTitle" class="text-3xl font-bold mb-4 title-font">Answer Review</h2><div id="answerReviewContent" class="space-y-4 max-h-[70vh] overflow-y-auto"></div><button id="closeAnswerReviewModal" class="absolute top-4 right-4 text-2xl font-bold text-slate-500 hover:text-red-500">&times;</button></div></div>
+    <div id="studentProfileModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-4xl relative"><h2 id="studentProfileTitle" class="text-3xl font-bold mb-4 title-font">Student Profile</h2><div id="studentProfileContent"></div><button id="closeStudentProfileModal" class="absolute top-4 right-4 text-2xl font-bold text-slate-500 hover:text-red-500">&times;</button></div></div>
+    <div id="quizBuilderModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-6xl relative"><h2 id="quizBuilderTitle" class="text-3xl font-bold mb-4 title-font">Create New Quiz</h2><div id="quizBuilderContent" class="grid grid-cols-1 lg:grid-cols-2 gap-8"></div><button id="closeQuizBuilderModal" class="absolute top-4 right-4 text-2xl font-bold text-slate-500 hover:text-red-500">&times;</button></div></div>
+    <div id="questionBankModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-2xl relative"><h2 id="questionBankModalTitle" class="text-3xl font-bold mb-4 title-font">Add Question to Bank</h2><form id="questionBankForm"></form><button id="closeQuestionBankModal" class="absolute top-4 right-4 text-2xl font-bold text-slate-500 hover:text-red-500">&times;</button></div></div>
+    
+    <!-- Other modals (participant, club, admin) can be reused or created as needed -->
+    <div id="participantModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-lg relative"><h2 id="participantModalTitle" class="text-3xl font-bold mb-4 title-font">Add Participant</h2><form id="participantForm"><input type="hidden" id="originalRoll"><select id="participantClass" class="input-field" required><option value="">Select Class</option></select><input type="number" id="participantRoll" class="input-field" placeholder="Roll" required><input type="text" id="participantName" class="input-field" placeholder="Name" required><input type="text" id="participantPin" class="input-field" placeholder="PIN" required><div class="flex gap-4 mt-4"><button type="button" id="closeParticipantModalBtn" class="action-button !bg-slate-500">Cancel</button><button type="submit" class="action-button">Save Participant</button></div></form></div></div>
+    <div id="announcementModal" class="modal-backdrop hidden"><div class="modal-content w-11/12 max-w-2xl relative"><h2 id="announcementModalTitle" class="text-3xl font-bold mb-4 title-font">New Announcement</h2><form id="announcementForm"><input type="text" id="announcementTitle" class="input-field" placeholder="Title" required><textarea id="announcementContent" class="input-field" rows="4" placeholder="Content" required></textarea><select id="announcementTarget" class="input-field"><option value="All">For All Classes</option></select><div class="flex gap-4 mt-4"><button type="button" class="action-button !bg-slate-500" id="closeAnnouncementModal">Cancel</button><button type="submit" class="action-button">Post</button></div></form></div></div>
+
+
+    <script>
+        // --- API URL ---
+        const API_URL = "/api"; // Using relative URL for production
+
+        // --- SERVICE WORKER FOR PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+        
+        // --- GLOBAL STATE ---
+        let currentQuizData = {}, currentQuestionIndex = 0, userAnswers = {}, quizTimerInterval, resultChart, lastResultId, websiteSettings = {};
+        let adminDashboardCache = {};
+        let quizInProgress = false;
+        let adminCharts = {};
+
+        // --- DOM ELEMENTS (Simplified for brevity) ---
+        // A helper function will be used to get elements by ID to avoid a long list here.
+        const getEl = (id) => document.getElementById(id);
+
+        // --- API HELPER ---
+        async function callApi(action, payload = {}) {
+            getEl('loader').style.display = 'flex';
+            try {
+                const adminInfo = JSON.parse(sessionStorage.getItem('userData'));
+                const userType = sessionStorage.getItem('userType');
+                const body = { action, payload };
+                if (userType === 'admin' && adminInfo) {
+                    body.adminInfo = { id: adminInfo.id, name: adminInfo.name, role: adminInfo.role };
+                }
+
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(body), 
+                    headers: {'Content-Type': 'application/json'} 
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                // Handle CSV download
+                if (response.headers.get("Content-Type")?.includes("text/csv")) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'participants.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    return {result: 'success', message: 'Download started.'};
+                }
+
+                const result = await response.json();
+                if (result.result === 'error') {
+                    throw new Error(result.message || 'An unknown API error occurred.');
+                }
+                return result;
+            } catch (error) {
+                console.error('API Call Failed:', action, error);
+                showConfirmationModal({ title: 'Error', message: error.message, okText: 'OK', cancelable: false });
+                return null;
+            } finally {
+                getEl('loader').style.display = 'none';
+            }
+        }
+
+        // --- CUSTOM MODAL ---
+        function showConfirmationModal({ title, message, okText = 'Confirm', cancelText = 'Cancel', onConfirm, onCancel, cancelable = true }) {
+            getEl('confirmationTitle').textContent = title;
+            getEl('confirmationMessage').innerHTML = message; // Use innerHTML to support basic formatting
+            getEl('confirmOkBtn').textContent = okText;
+            getEl('confirmCancelBtn').textContent = cancelText;
+            getEl('confirmCancelBtn').style.display = cancelable ? 'block' : 'none';
+            getEl('confirmationModal').classList.remove('hidden');
+
+            const okHandler = () => { if (onConfirm) onConfirm(); cleanup(); };
+            const cancelHandler = () => { if (onCancel) onCancel(); cleanup(); };
+            const cleanup = () => {
+                getEl('confirmationModal').classList.add('hidden');
+                getEl('confirmOkBtn').removeEventListener('click', okHandler);
+                getEl('confirmCancelBtn').removeEventListener('click', cancelHandler);
+            };
+
+            getEl('confirmOkBtn').addEventListener('click', okHandler, { once: true });
+            getEl('confirmCancelBtn').addEventListener('click', cancelHandler, { once:true });
+        }
+        
+        // --- VIEW MANAGEMENT ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => view.style.display = 'none');
+            getEl(viewId).style.display = 'block';
+        }
+
+        // --- AUTH & SESSION ---
+        function checkSession() {
+            const userType = sessionStorage.getItem('userType');
+            const userData = JSON.parse(sessionStorage.getItem('userData'));
+            
+            loadInitialData().then(() => {
+                if (userType === 'student' && userData) {
+                    getEl('userGreeting').textContent = `স্বাগতম, ${userData.name}`;
+                    getEl('userGreeting').style.display = 'inline-block';
+                    getEl('logoutButton').style.display = 'inline-block';
+                    getEl('adminLoginButton').style.display = 'none';
+                    showView('studentDashboardView');
+                    loadStudentDashboard();
+                } else if (userType === 'admin' && userData) {
+                    getEl('userGreeting').textContent = `স্বাগতম, ${userData.name} (${userData.role})`;
+                    getEl('userGreeting').style.display = 'inline-block';
+                    getEl('logoutButton').style.display = 'inline-block';
+                    getEl('adminLoginButton').style.display = 'none';
+                    document.querySelectorAll('[data-role="SuperAdmin"]').forEach(el => {
+                        el.style.display = userData.role === 'SuperAdmin' ? '' : 'none';
+                    });
+                    showView('adminDashboardView');
+                    loadAdminDashboard();
+                } else {
+                    getEl('userGreeting').style.display = 'none';
+                    getEl('logoutButton').style.display = 'none';
+                    getEl('adminLoginButton').style.display = 'inline-block';
+                    showView('studentLoginView');
+                }
+            });
+        }
+        
+        // --- INITIAL DATA LOAD ---
+        async function loadInitialData() {
+            const [contentResult, classesResult] = await Promise.all([
+                callApi('getWebsiteContent'),
+                callApi('getClassList')
+            ]);
+            if (contentResult) {
+                websiteSettings = contentResult.data;
+                // Update UI with website settings...
+                document.documentElement.style.setProperty('--accent', websiteSettings.themecolorprimary || '#3b82f6');
+            }
+            if (classesResult) {
+                const classSelects = [getEl('studentClass'), getEl('participantClass'), getEl('announcementTarget')];
+                classSelects.forEach(select => {
+                    if (!select) return;
+                    const currentVal = select.value;
+                    let options = select.id === 'announcementTarget' ? '<option value="All">সকলের জন্য</option>' : '<option value="">আপনার শ্রেণী নির্বাচন করুন</option>';
+                    classesResult.data.forEach(className => {
+                        options += `<option value="${className}">${className}</option>`;
+                    });
+                    select.innerHTML = options;
+                    select.value = currentVal;
+                });
+            }
+        }
+
+        // --- STUDENT LOGIC ---
+        async function loadStudentDashboard() {
+            const userData = JSON.parse(sessionStorage.getItem('userData'));
+            const [quizzesResult, historyResult, gamificationResult] = await Promise.all([
+                callApi('getActiveQuizzes', { className: userData.className, studentRoll: userData.roll }),
+                callApi('getStudentHistory', { studentRoll: userData.roll, studentClass: userData.className }),
+                callApi('getGamificationData', { studentRoll: userData.roll, studentClass: userData.className })
+            ]);
+            
+            renderGamificationHeader(gamificationResult.data);
+            renderActiveQuizzes(quizzesResult.data);
+            renderStudentHistory(historyResult.data);
+            renderAchievements(gamificationResult.data.achievements);
+            // Initially load leaderboard
+            loadLeaderboard();
+        }
+
+        function renderGamificationHeader(data) {
+            const progress = (data.xp - data.currentLevelXp) / (data.nextLevelXp - data.currentLevelXp) * 100;
+            getEl('gamificationHeader').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <p class="text-sm text-slate-500">Level ${data.level}</p>
+                        <h3 class="text-2xl font-bold title-font">আপনার অগ্রগতি</h3>
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        <div class="flex justify-between text-sm font-bold">
+                            <span>${data.xp} XP</span>
+                            <span>${data.nextLevelXp} XP</span>
+                        </div>
+                        <div class="xp-bar-bg"><div class="xp-bar" style="width: ${progress}%"></div></div>
+                        <p class="text-xs text-center mt-1">পরবর্তী লেভেলের জন্য আরও ${data.nextLevelXp - data.xp} XP প্রয়োজন</p>
+                    </div>
+                </div>`;
+        }
+        
+        function renderActiveQuizzes(quizzes) {
+            const listEl = getEl('activeQuizzesList');
+            listEl.innerHTML = '';
+            if (quizzes && quizzes.length > 0) {
+                quizzes.forEach(quiz => {
+                    const quizCard = document.createElement('div');
+                    quizCard.className = 'card !p-0 overflow-hidden';
+                    quizCard.innerHTML = `
+                        <img src="${quiz.clublogourl || 'https://placehold.co/600x400/3b82f6/ffffff?text=' + encodeURIComponent(quiz.clubname)}" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-2xl title-font">${quiz.quiztitle}</h3>
+                            <p class="font-bold text-[var(--accent)]">${quiz.clubname}</p>
+                            <p class="text-sm text-[var(--text-secondary)]">প্রশ্ন: ${quiz.totalquestions} | সময়: ${quiz.timelimitminutes} মিনিট</p>
+                            <button class="action-button mt-4" ${quiz.isCompleted ? 'disabled' : ''}>${quiz.isCompleted ? 'সম্পন্ন' : 'কুইজ শুরু করুন'}</button>
+                        </div>`;
+                    if (!quiz.isCompleted) {
+                        quizCard.querySelector('button').onclick = () => startQuiz(quiz);
+                    }
+                    listEl.appendChild(quizCard);
+                });
+            } else {
+                listEl.innerHTML = '<p class="text-center text-[var(--text-secondary)] col-span-full">এই মুহূর্তে আপনার ক্লাসের জন্য কোনো সক্রিয় কুইজ নেই।</p>';
+            }
+        }
+        
+        function renderStudentHistory(history) {
+            const listEl = getEl('myResultsList');
+            if (history && history.length > 0) {
+                let table = `<table class="table-auto"><thead><tr><th>কুইজের নাম</th><th>স্কোর</th><th>তারিখ</th><th>কার্যক্রম</th></tr></thead><tbody>`;
+                history.forEach(res => {
+                    table += `
+                        <tr>
+                            <td>${res.quizTitle}</td>
+                            <td><span class="font-bold">${res.score} / ${res.totalQuestions}</span></td>
+                            <td>${new Date(res.timestamp).toLocaleString()}</td>
+                            <td><button class="student-review-btn action-button !w-auto !text-xs !py-1 !px-2" data-result-id="${res.resultId}">পর্যালোচনা (+20 XP)</button></td>
+                        </tr>
+                    `;
+                });
+                table += `</tbody></table>`;
+                listEl.innerHTML = table;
+            } else {
+                listEl.innerHTML = `<div class="card text-center"><p>আপনি এখনও কোনো কুইজে অংশগ্রহণ করেননি।</p></div>`;
+            }
+        }
+
+        function renderAchievements(achievements) {
+            const listEl = getEl('achievementsList');
+            listEl.innerHTML = '';
+            achievements.forEach(ach => {
+                listEl.innerHTML += `
+                    <div class="achievement-card ${ach.unlocked ? 'unlocked' : ''}">
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <h4 class="font-bold">${ach.name}</h4>
+                        <p class="text-xs">${ach.description}</p>
+                    </div>
+                `;
+            });
+        }
+
+        async function loadLeaderboard() {
+            const result = await callApi('getLeaderboard', { type: 'all_time' });
+            if(result) {
+                const contentEl = getEl('leaderboardContent');
+                let table = `<div class="table-wrapper"><table class="table-auto"><thead><tr><th>Rank</th><th>Name</th><th>Class</th><th>XP</th></tr></thead><tbody>`;
+                result.data.forEach(entry => {
+                    table += `<tr><td>${entry.rank}</td><td>${entry.name}</td><td>${entry.className}</td><td class="font-bold">${entry.xp}</td></tr>`;
+                });
+                table += `</tbody></table></div>`;
+                contentEl.innerHTML = table;
+            }
+        }
+        
+        // ... (startQuiz, renderQuestion, submitAndShowResult logic needs updating for new question types and gamification)
+        async function startQuiz(quiz) {
+            const detailsResult = await callApi('getQuizDetails', { quizId: quiz.quizid });
+            if (detailsResult && detailsResult.data.length > 0) {
+                // Reset state
+                clearInterval(quizTimerInterval);
+                currentQuizData = { quizId: quiz.quizid, title: quiz.quiztitle, timeLimit: quiz.timelimitminutes, questions: detailsResult.data };
+                currentQuestionIndex = 0;
+                userAnswers = {};
+                quizInProgress = true;
+                
+                getEl('totalQuestions').textContent = currentQuizData.questions.length;
+                showView('quizView');
+                renderQuestion();
+                startTimer(currentQuizData.timeLimit * 60);
+            }
+        }
+        
+        function renderQuestion() {
+            const question = currentQuizData.questions[currentQuestionIndex];
+            getEl('questionText').textContent = question.QuestionText;
+            getEl('questionNumber').textContent = currentQuestionIndex + 1;
+            getEl('optionsContainer').innerHTML = '';
+            getEl('questionImageContainer').innerHTML = question.ImageURL ? `<img src="${question.ImageURL}" class="max-w-full h-auto mx-auto rounded-lg shadow-md">` : '';
+
+            switch(question.QuestionType) {
+                case 'mcq':
+                    question.Options.forEach(optionText => {
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'option-item p-4 border border-[var(--border)] rounded-lg cursor-pointer';
+                        optionDiv.textContent = optionText;
+                        optionDiv.onclick = () => selectAnswer(question.QuestionID, optionText, optionDiv);
+                        if (userAnswers[question.QuestionID] === optionText) {
+                            optionDiv.classList.add('selected-option');
+                        }
+                        getEl('optionsContainer').appendChild(optionDiv);
+                    });
+                    break;
+                case 'fill_blank':
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'input-field';
+                    input.placeholder = 'আপনার উত্তর টাইপ করুন';
+                    input.value = userAnswers[question.QuestionID] || '';
+                    input.oninput = () => userAnswers[question.QuestionID] = input.value;
+                    getEl('optionsContainer').appendChild(input);
+                    break;
+            }
+
+            // Update button states
+            getEl('prevQuestionBtn').disabled = currentQuestionIndex === 0;
+            getEl('nextQuestionBtn').style.display = currentQuestionIndex === currentQuizData.questions.length - 1 ? 'none' : 'block';
+            getEl('submitQuizBtn').style.display = currentQuestionIndex === currentQuizData.questions.length - 1 ? 'block' : 'none';
+        }
+
+        function selectAnswer(questionId, answer, element) {
+            userAnswers[questionId] = answer;
+            document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected-option'));
+            element.classList.add('selected-option');
+        }
+
+        async function submitAndShowResult() {
+            if (!quizInProgress) return;
+            quizInProgress = false;
+            clearInterval(quizTimerInterval);
+            const userData = JSON.parse(sessionStorage.getItem('userData'));
+            const payload = { quizId: currentQuizData.quizId, studentRoll: userData.roll, studentClass: userData.className, answers: userAnswers };
+            const result = await callApi('submitQuiz', payload);
+            if (result) {
+                lastResultId = result.data.resultId;
+                getEl('finalScore').textContent = result.data.score;
+                getEl('finalTotal').textContent = result.data.total;
+                
+                let gamificationHtml = `<p class="text-lg font-bold text-green-500">+${result.data.xp_earned} XP অর্জিত হয়েছে!</p>`;
+                if (result.data.level_up) {
+                    gamificationHtml += `<p class="text-xl font-bold text-amber-500 animate-pulse">অভিনন্দন! আপনি নতুন লেভেলে পৌঁছেছেন!</p>`;
+                }
+                getEl('resultGamification').innerHTML = gamificationHtml;
+
+                showView('resultView');
+                // renderResultChart(result.data.score, result.data.total);
+            }
+        }
+        
+        // --- ADMIN LOGIC ---
+        async function loadAdminDashboard() {
+            // New dashboard with analytics
+            const result = await callApi('getAdminDashboardData');
+            if(result) {
+                const { stats, recentActivity, participationChart } = result.data;
+                const dashboardEl = getEl('tab-dashboard');
+                // Render stats cards, recent activity table, and participation chart
+                dashboardEl.innerHTML = `
+                    <h1 class="text-3xl font-bold title-font mb-6">ড্যাশবোর্ড ওভারভিউ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="card !p-6 text-center"><p class="text-slate-500">মোট শিক্ষার্থী</p><p class="text-3xl font-bold">${stats.students}</p></div>
+                        <div class="card !p-6 text-center"><p class="text-slate-500">মোট কুইজ</p><p class="text-3xl font-bold">${stats.quizzes}</p></div>
+                        <div class="card !p-6 text-center"><p class="text-slate-500">মোট অংশগ্রহণ</p><p class="text-3xl font-bold">${stats.results}</p></div>
+                        <div class="card !p-6 text-center"><p class="text-slate-500">প্রশ্ন ব্যাংকে প্রশ্ন</p><p class="text-3xl font-bold">${stats.questions_in_bank}</p></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                        <div class="card"><h3 class="font-bold mb-4">সাপ্তাহিক অংশগ্রহণ</h3><canvas id="participationChart"></canvas></div>
+                        <div class="card"><h3 class="font-bold mb-4">সাম্প্রতিক কার্যক্রম</h3><div id="recentActivityTable"></div></div>
+                    </div>
+                `;
+
+                // Render Chart
+                const ctx = getEl('participationChart').getContext('2d');
+                if(adminCharts.participation) adminCharts.participation.destroy();
+                adminCharts.participation = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: participationChart.labels, datasets: [{ label: 'অংশগ্রহণ', data: participationChart.data, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 2, tension: 0.3 }] },
+                    options: { responsive: true }
+                });
+            }
+        }
+
+        // ... (All other admin functions for new features like Question Bank, Reports, etc.)
+        
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            // Main navigation for student dashboard
+            getEl('studentDashboardView').addEventListener('click', e => {
+                const tabBtn = e.target.closest('.student-tab-button');
+                if (tabBtn) {
+                    const tabName = tabBtn.dataset.tab;
+                    document.querySelectorAll('.student-tab-button').forEach(btn => btn.classList.remove('active'));
+                    tabBtn.classList.add('active');
+                    document.querySelectorAll('.student-tab-content').forEach(content => content.classList.add('hidden'));
+                    getEl(`tab-${tabName}`).classList.remove('hidden');
+                }
+            });
+
+            // Main navigation for admin dashboard
+            getEl('adminSidebar').addEventListener('click', e => {
+                const link = e.target.closest('.sidebar-link');
+                if (link) {
+                    e.preventDefault();
+                    const tab = link.dataset.tab;
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.add('hidden'));
+                    getEl(`tab-${tab}`).classList.remove('hidden');
+                    // Load content for the clicked tab, e.g., loadQuestionBank();
+                }
+            });
+            
+            // Other event listeners (forms, buttons, etc.)
+            getEl('studentLoginForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                const payload = { className: getEl('studentClass').value, roll: getEl('studentRoll').value, pin: getEl('studentPin').value };
+                const result = await callApi('studentLogin', payload);
+                if (result) {
+                    sessionStorage.setItem('userType', 'student');
+                    sessionStorage.setItem('userData', JSON.stringify(result.data));
+                    checkSession();
+                }
+            });
+            
+            getEl('logoutButton').addEventListener('click', () => {
+                sessionStorage.clear();
+                window.location.reload();
+            });
+        });
+
+    </script>
+</body>
+</html>
