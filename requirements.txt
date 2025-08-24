@@ -4,6 +4,3 @@ Flask-Cors
 Werkzeug
 gunicorn
 psycopg2-binary
-Flask-Migrate
-Flask-JWT-Extended
-python-dotenv
